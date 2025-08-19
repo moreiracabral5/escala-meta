@@ -1,0 +1,2340 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Escala de Trabalho</title>
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin: 10px 0;
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    td, th {
+      border: 1px solid #ccc;
+      padding: 5px;
+      width: 40px;
+      height: 40px;
+      text-align: center;
+    }
+
+    .folga {
+      background-color: #8bc34a;
+      color: white;
+      font-weight: bold;
+    }
+
+    input, button, select {
+      margin: 5px 0;
+      padding: 10px;
+      width: 100%;
+      max-width: 400px;
+      box-sizing: border-box;
+    }
+
+    .mesTitulo {
+      margin-top: 30px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* Estilo para abas */
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      background-color: #f1f1f1;
+      margin-right: 5px;
+      border-radius: 5px 5px 0 0;
+    }
+
+    .tab.active {
+      background-color: #8bc34a;
+      color: white;
+      font-weight: bold;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Estilo para tabela de ranking */
+    .ranking-table {
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    .ranking-table th {
+      background-color: #f1f1f1;
+    }
+
+    .ranking-table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .ranking-table tr:hover {
+      background-color: #e9e9e9;
+    }
+
+    .ranking-header {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    /* Estilo para filtros de ranking */
+    .filtros-ranking {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f5f5f5;
+      border-radius: 5px;
+    }
+
+    .filtro-item {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .filtro-item label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    /* Estilo para posição do usuário no ranking */
+    .posicao-usuario {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #e8f5e9;
+      border-radius: 5px;
+      border-left: 4px solid #8bc34a;
+    }
+
+    .posicao-usuario h4 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .posicao-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .posicao-info strong {
+      font-weight: bold;
+    }
+
+    /* Estilo para calendário de folgas */
+    .calendario-mes {
+      margin-bottom: 30px;
+    }
+    
+    .calendario-mes h3 {
+      margin-bottom: 10px;
+      color: #333;
+      border-bottom: 2px solid #8bc34a;
+      padding-bottom: 5px;
+    }
+    
+    .calendario-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+    
+    .dia-header {
+      font-weight: bold;
+      text-align: center;
+      padding: 5px;
+      background-color: #f1f1f1;
+    }
+    
+    .dia-celula {
+      min-height: 80px;
+      border: 1px solid #ddd;
+      padding: 5px;
+      position: relative;
+    }
+    
+    .dia-numero {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      font-weight: bold;
+      color: #555;
+    }
+    
+    .dia-folgas {
+      margin-top: 25px;
+      font-size: 12px;
+    }
+    
+    .dia-folgas span {
+      display: block;
+      background-color: #8bc34a;
+      color: white;
+      margin: 2px 0;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+    
+    .dia-vazio {
+      background-color: #f9f9f9;
+    }
+    
+    .hoje {
+      border: 2px solid #ff5722;
+    }
+
+    /* Estilos para dados detalhados */
+    .dados-detalhados-item {
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .dados-detalhados-item h5 {
+      margin: 0 0 10px 0;
+      color: #333;
+      font-size: 16px;
+    }
+
+    .dados-detalhados-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .dados-detalhados-valores {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .dados-detalhados-acoes {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-editar, .btn-excluir {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .btn-editar {
+      background-color: #2196F3;
+      color: white;
+    }
+
+    .btn-editar:hover {
+      background-color: #1976D2;
+    }
+
+    .btn-excluir {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .btn-excluir:hover {
+      background-color: #d32f2f;
+    }
+
+    /* Modal para edição */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      border-radius: 5px;
+      width: 80%;
+      max-width: 500px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+    }
+
+    .close {
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+    }
+
+    .modal-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .modal-form label {
+      font-weight: bold;
+    }
+
+    .modal-form input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .btn-salvar, .btn-cancelar {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .btn-salvar {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .btn-salvar:hover {
+      background-color: #45a049;
+    }
+
+    .btn-cancelar {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .btn-cancelar:hover {
+      background-color: #d32f2f;
+    }
+
+    @media (max-width: 600px) {
+      table {
+        font-size: 12px;
+      }
+
+      td, th {
+        padding: 3px;
+        width: 30px;
+        height: 30px;
+      }
+
+      .mesTitulo {
+        font-size: 16px;
+      }
+
+      button, input, select {
+        font-size: 14px;
+      }
+      
+      .filtros-ranking {
+        flex-direction: column;
+      }
+      
+      .calendario-grid {
+        grid-template-columns: repeat(7, 1fr);
+        font-size: 11px;
+      }
+      
+      .dia-celula {
+        min-height: 60px;
+      }
+
+      .dados-detalhados-info {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .dados-detalhados-acoes {
+        margin-top: 10px;
+      }
+
+      .modal-content {
+        width: 95%;
+        margin: 10% auto;
+      }
+    }
+  
+    .tema-escuro {
+      background-color: #121212;
+      color: #f5f5f5;
+    }
+    .tema-escuro input,
+    .tema-escuro select,
+    .tema-escuro button {
+      background-color: #1e1e1e;
+      color: #f5f5f5;
+      border: 1px solid #444;
+    }
+    
+    .tema-escuro .tab {
+      background-color: #333;
+      color: #f5f5f5;
+    }
+    
+    .tema-escuro .tab.active {
+      background-color: #6a9739;
+    }
+    
+    .tema-escuro .ranking-table th {
+      background-color: #333;
+    }
+    
+    .tema-escuro .ranking-table tr:nth-child(even) {
+      background-color: #2a2a2a;
+    }
+    
+    .tema-escuro .ranking-table tr:hover {
+      background-color: #3a3a3a;
+    }
+    
+    .tema-escuro .filtros-ranking {
+      background-color: #2a2a2a;
+    }
+    
+    .tema-escuro .posicao-usuario {
+      background-color: #263238;
+      border-left: 4px solid #6a9739;
+    }
+    
+    .tema-escuro .dia-header {
+      background-color: #333;
+      color: #f5f5f5;
+    }
+    
+    .tema-escuro .dia-celula {
+      border-color: #444;
+      background-color: #1e1e1e;
+    }
+    
+    .tema-escuro .dia-vazio {
+      background-color: #2a2a2a;
+    }
+    
+    .tema-escuro .dia-numero {
+      color: #ccc;
+    }
+
+    .tema-escuro .dados-detalhados-item {
+      background-color: #2a2a2a;
+      border-color: #444;
+    }
+
+    .tema-escuro .dados-detalhados-item h5 {
+      color: #f5f5f5;
+    }
+
+    .tema-escuro .dados-detalhados-valores {
+      color: #ccc;
+    }
+
+    .tema-escuro .modal-content {
+      background-color: #2a2a2a;
+      border-color: #444;
+      color: #f5f5f5;
+    }
+
+    .tema-escuro .modal-form input {
+      background-color: #1e1e1e;
+      border-color: #444;
+      color: #f5f5f5;
+    }
+
+    .progress-container {
+      width: 100%;
+      background-color: #f3f3f3;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 20px;
+      background-color: #4CAF50;
+      width: 0%;
+      color: black;
+      border-radius: 5px;
+    }
+
+    .tema-escuro .progress-container {
+      background-color: #333;
+    }
+
+    .tema-escuro .progress-bar {
+      background-color: #6a9739;
+    }
+  </style>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<div id="botaoSairTopo" style="position: absolute; top: 10px; right: 10px; display: none;">
+  <button onclick="logout()">Sair</button>
+</div>
+
+<div id="adminBackupBtn" style="display: none; text-align: center; margin-top: 60px;">
+  <button onclick="backupParaFirebase()">Backup manual (usuários + folgas + ranking + meta geral) SALVAR</button>
+</div>
+
+<h2>Login</h2>
+<div id="loginDiv">
+  <input type="text" id="login" placeholder="Login">
+  <input type="password" id="senha" placeholder="Senha">
+  <label><input type="checkbox" id="mostrarSenha" onchange="toggleSenha()"> Mostrar senha</label>
+  <br>
+  <button onclick="fazerLogin()">Entrar</button>
+</div>
+
+<div id="app" class="hidden">
+  <h2>Bem-vindo, <span id="usuarioNome"></span> (<span id="usuarioTipo"></span>)</h2>
+  
+  <span style="display: inline-block; margin-right: 10px;">
+    <input type="password" id="novaSenhaUsuario" placeholder="Nova senha" style="max-width: 150px;">
+    <button onclick="alterarSenha()">Alterar Senha</button>
+  </span>
+
+  <button onclick="alternarTema()">Alternar Tema</button>
+  <span id="toggleBackupAutoSpan" style="display: none; margin-left: 10px;">
+    <label style="font-weight: bold;">
+      <input type="checkbox" id="toggleBackupAuto" onchange="alternarBackupAuto()">
+      Backup automático ao alterar usuário/folga/ranking/meta
+    </label>
+  </span>
+
+  <!-- Abas de navegação -->
+  <div class="tabs" id="appTabs">
+    <div class="tab active" data-tab="folgas">Escala de Folgas</div>
+    <div class="tab" data-tab="calendario">Calendário de Folgas</div>
+    <div class="tab" data-tab="ranking">Ranking de Vendas</div>
+    <div class="tab" data-tab="metas">Metas de Vendas</div>
+  </div>
+
+  <!-- Conteúdo da aba de folgas -->
+  <div class="tab-content active" id="folgasContent">
+    <div id="adminPanel" class="hidden">
+      <h3>Cadastrar novo funcionário</h3>
+      <input type="text" id="novoLogin" placeholder="Login">
+      <input type="password" id="novaSenha" placeholder="Senha">
+      <select id="novoTipo">
+        <option value="funcionario">Funcionário</option>
+        <option value="admin">Administrador</option>
+      </select>
+      <select id="novoTurno">
+        <option value="manha">Turno da Manhã</option>
+        <option value="tarde">Turno da Tarde</option>
+      </select>
+      <button onclick="cadastrarUsuario()">Cadastrar</button>
+
+      <h3>Gerenciar usuários</h3>
+      <select id="listaUsuariosSelect"></select><br>
+      <input type="text" id="editarLogin" placeholder="Novo login">
+      <input type="password" id="editarSenha" placeholder="Nova senha">
+      <select id="editarTipo">
+        <option value="funcionario">Funcionário</option>
+        <option value="admin">Administrador</option>
+      </select>
+      <select id="editarTurno">
+        <option value="manha">Turno da Manhã</option>
+        <option value="tarde">Turno da Tarde</option>
+      </select>
+      <button onclick="alterarUsuario()">Alterar</button>
+      <button onclick="removerUsuario()">Remover</button>
+
+      <h3>Atribuir folga a funcionário</h3>
+      <select id="usuarioFolgaSelect"></select>
+      <input type="text" id="folgaAdminData">
+      <button onclick="atribuirFolga()">Atribuir Folga</button>
+
+      <h3>Editar folga de funcionário</h3>
+      <select id="usuarioEditarFolgaSelect" onchange="popularFolgasParaEdicao()"></select>
+      <select id="dataFolgaEditarSelect"></select>
+      <input type="date" id="novaDataFolgaInput">
+      <button onclick="editarFolga()">Editar Folga</button>
+      <button onclick="excluirFolga()">Excluir Folga</button>
+
+      <h3>Visualizar todas as folgas</h3>
+      <div id="listaFolgas"></div>
+      <h3>Visualizar calendário de folgas de um funcionário</h3>
+      <select id="visualizarFuncionarioSelect" onchange="desenharCalendariosFuncionario()"></select>
+      <div id="calendarioFuncionario"></div>
+    </div>
+
+    <h3>Calendário Anual de Folgas</h3>
+    <div id="calendarios"></div>
+  </div>
+  
+  <!-- Conteúdo da nova aba de calendário de folgas -->
+  <div class="tab-content" id="calendarioContent">
+    <h3>Calendário Mensal de Folgas</h3>
+    
+    <div class="filtros-ranking">
+      <div class="filtro-item">
+        <label for="filtroMesCalendario">Selecione o mês:</label>
+        <select id="filtroMesCalendario" onchange="atualizarCalendarioFolgas()">
+          <option value="todos">Todos os meses</option>
+          <option value="0">Janeiro</option>
+          <option value="1">Fevereiro</option>
+          <option value="2">Março</option>
+          <option value="3">Abril</option>
+          <option value="4">Maio</option>
+          <option value="5">Junho</option>
+          <option value="6">Julho</option>
+          <option value="7">Agosto</option>
+          <option value="8">Setembro</option>
+          <option value="9">Outubro</option>
+          <option value="10">Novembro</option>
+          <option value="11">Dezembro</option>
+        </select>
+      </div>
+      
+      <div class="filtro-item">
+        <label for="filtroAnoCalendario">Selecione o ano:</label>
+        <select id="filtroAnoCalendario" onchange="atualizarCalendarioFolgas()">
+          <!-- Anos serão preenchidos dinamicamente -->
+        </select>
+      </div>
+      
+      <div class="filtro-item">
+        <label for="filtroTurnoCalendario">Filtrar por turno:</label>
+        <select id="filtroTurnoCalendario" onchange="atualizarCalendarioFolgas()">
+          <option value="todos">Todos os turnos</option>
+          <option value="manha">Turno da Manhã</option>
+          <option value="tarde">Turno da Tarde</option>
+        </select>
+      </div>
+    </div>
+    
+    <div id="calendarioFolgas"></div>
+  </div>
+
+  <!-- Conteúdo da aba de ranking -->
+  <div class="tab-content" id="rankingContent">
+    <h3>Ranking de Vendas e Abastecimentos</h3>
+    
+    <!-- Formulário para adicionar dados de vendas e abastecimentos -->
+    <div id="rankingForm">
+      <h4>Adicionar Dados Diários</h4>
+      <select id="usuarioRankingSelect"></select>
+      <input type="date" id="dataRanking" value="">
+      <input type="number" id="totalVendas" placeholder="Total de Vendas" min="0">
+      <input type="number" id="totalAbastecimentos" placeholder="Total de Abastecimentos" min="0">
+      <button onclick="adicionarDadosRanking()">Salvar Dados</button>
+    </div>
+    
+    <!-- Filtros de ranking -->
+    <div class="filtros-ranking">
+      <div class="filtro-item">
+        <label for="filtroTurnoSelect">Filtrar por Turno:</label>
+        <select id="filtroTurnoSelect" onchange="atualizarTabelasRanking()">
+          <option value="todos">Todos os Turnos</option>
+          <option value="manha">Turno da Manhã</option>
+          <option value="tarde">Turno da Tarde</option>
+        </select>
+      </div>
+      
+      <div class="filtro-item">
+        <label for="filtroMesSelect">Filtrar por Mês:</label>
+        <select id="filtroMesSelect" onchange="atualizarTabelasRanking()">
+          <!-- Opções de mês serão adicionadas dinamicamente -->
+        </select>
+      </div>
+
+      <div class="filtro-item">
+        <label for="ordenacaoRankingSelect">Ordenar Ranking por:</label>
+        <select id="ordenacaoRankingSelect" onchange="atualizarTabelasRanking()">
+          <option value="vendas">Maior Total de Vendas</option>
+          <option value="abastecimentos">Maior Total de Abastecimentos</option>
+        </select>
+      </div>
+    </div>
+    
+    <!-- Exibição da posição do usuário no ranking (para funcionários) -->
+    <div id="posicaoUsuario" class="posicao-usuario" style="display: none;">
+      <h4>Sua Posição no Ranking</h4>
+      <div class="posicao-info">
+        <span>Posição no Ranking de Vendas:</span>
+        <strong id="posicaoVendas">-</strong>
+      </div>
+      <div class="posicao-info">
+        <span>Total de Vendas:</span>
+        <strong id="totalVendasUsuario">0</strong>
+      </div>
+      <div class="posicao-info">
+        <span>Posição no Ranking de Abastecimentos:</span>
+        <strong id="posicaoAbastecimentos">-</strong>
+      </div>
+      <div class="posicao-info">
+        <span>Total de Abastecimentos:</span>
+        <strong id="totalAbastecimentosUsuario">0</strong>
+      </div>
+    </div>
+    
+    <!-- Tabelas de ranking (visíveis apenas para admin) -->
+    <div id="tabelasRanking">
+      <div class="ranking-header">Ranking do Turno da Manhã</div>
+      <table class="ranking-table" id="rankingManha">
+        <thead>
+          <tr>
+            <th>Funcionário</th>
+            <th>Total de Vendas</th>
+            <th>Total de Abastecimentos</th>
+          </tr>
+        </thead>
+        <tbody id="rankingManhaTbody">
+          <!-- Dados serão inseridos dinamicamente -->
+        </tbody>
+      </table>
+      
+      <div class="ranking-header">Ranking do Turno da Tarde</div>
+      <table class="ranking-table" id="rankingTarde">
+        <thead>
+          <tr>
+            <th>Funcionário</th>
+            <th>Total de Vendas</th>
+            <th>Total de Abastecimentos</th>
+          </tr>
+        </thead>
+        <tbody id="rankingTardeTbody">
+          <!-- Dados serão inseridos dinamicamente -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Seção de Dados Detalhados por Dia -->
+    <div id="dadosDetalhadosDiarios" style="margin-top: 30px;">
+      <h4 class="ranking-header">Dados Detalhados por Dia</h4>
+      <div id="listaDadosDetalhados">
+        <!-- Os dados detalhados por usuário e dia serão inseridos aqui via JavaScript -->
+        <p>Carregando dados detalhados...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conteúdo da aba de metas -->
+  <div class="tab-content" id="metasContent">
+    <div style="margin-bottom: 20px; padding: 15px; background-color: #e8f5e9; border-radius: 5px; border-left: 4px solid #8bc34a;">
+      <h4>Definir Meta Geral Mensal para Todos os Funcionários</h4>
+      <label for="metaGeralInput" style="display: block; margin-bottom: 5px; font-weight: bold;">Meta Geral Mensal:</label>
+      <input type="number" id="metaGeralInput" placeholder="Ex: 1000" min="0" style="width: 150px; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+      <button onclick="salvarMetaGeral()" style="padding: 8px 15px; margin-left: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer;">Salvar Meta Geral</button>
+    </div>
+    <h3>Metas de Vendas - Turno da Manhã</h3>
+    <table class="metas-table" id="metasManhaTable">
+      <thead>
+        <tr>
+          <th>Funcionário</th>
+          <th>Vendas/Falta</th>
+          <th>Progresso</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Dados serão preenchidos via JavaScript -->
+      </tbody>
+    </table>
+
+    <h3>Metas de Vendas - Turno da Tarde</h3>
+    <table class="metas-table" id="metasTardeTable">
+      <thead>
+        <tr>
+          <th>Funcionário</th>
+          <th>Vendas/Falta</th>
+          <th>Progresso</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Dados serão preenchidos via JavaScript -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal para edição de dados -->
+<div id="modalEdicao" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Editar Dados do Dia</h3>
+      <span class="close" onclick="fecharModalEdicao()">&times;</span>
+    </div>
+    <div class="modal-form">
+      <label for="modalUsuario">Usuário:</label>
+      <input type="text" id="modalUsuario" readonly>
+      
+      <label for="modalData">Data:</label>
+      <input type="date" id="modalData" readonly>
+      
+      <label for="modalVendas">Total de Vendas:</label>
+      <input type="number" id="modalVendas" min="0">
+      
+      <label for="modalAbastecimentos">Total de Abastecimentos:</label>
+      <input type="number" id="modalAbastecimentos" min="0">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-salvar" onclick="salvarEdicaoDados()">Salvar</button>
+      <button class="btn-cancelar" onclick="fecharModalEdicao()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const firebaseConfig = {
+  apiKey: "AIzaSyAUdduUj1JIkorI_DD2cT44rOjLXTnD-oE",
+  authDomain: "escala-17237.firebaseapp.com",
+  databaseURL: "https://escala-17237-default-rtdb.firebaseio.com",
+  projectId: "escala-17237",
+  storageBucket: "escala-17237.firebasestorage.app",
+  messagingSenderId: "512909333959",
+  appId: "1:512909333959:web:0ef8e3b238f3746aa235e2"
+};
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // Garante que o usuário admin esteja sempre presente e atualiza a senha se necessário
+  let usuariosExistentes = JSON.parse(localStorage.getItem("usuarios")) || [];
+  const adminUser = { login: "admin", senha: "admin123", tipo: "admin", turno: "manha" };
+  
+  const adminIndex = usuariosExistentes.findIndex(u => u.login === "admin");
+  if (adminIndex === -1) {
+    usuariosExistentes.unshift(adminUser); // Adiciona no início se não existir
+  } else {
+    usuariosExistentes[adminIndex] = adminUser; // Atualiza o usuário admin existente
+  }
+
+  // Adiciona outros usuários se o localStorage estiver vazio ou se não existirem
+  const outrosUsuarios = [
+    { login: "joao", senha: "1234", tipo: "funcionario", turno: "manha" },
+    { login: "maria", senha: "abcd", tipo: "funcionario", turno: "tarde" }
+  ];
+  outrosUsuarios.forEach(novoUser => {
+    if (!usuariosExistentes.some(u => u.login === novoUser.login)) {
+      usuariosExistentes.push(novoUser);
+    }
+  });
+  localStorage.setItem("usuarios", JSON.stringify(usuariosExistentes));
+
+  // Inicialização de dados de ranking no localStorage
+  if (!localStorage.getItem("ranking")) {
+    localStorage.setItem("ranking", JSON.stringify({}));
+  }
+
+  let usuarioLogado = null;
+
+  // Função para alternar entre abas
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', function() {
+        // Remove a classe active de todas as abas
+        tabs.forEach(t => t.classList.remove('active'));
+        // Adiciona a classe active na aba clicada
+        this.classList.add('active');
+        
+        // Esconde todos os conteúdos de aba
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.classList.remove('active');
+        });
+        
+        // Mostra o conteúdo da aba selecionada
+        const tabId = this.getAttribute('data-tab');
+        document.getElementById(tabId + 'Content').classList.add('active');
+        
+        // Se a aba for de calendário, atualiza o calendário de folgas
+        if (tabId === 'calendario') {
+          atualizarCalendarioFolgas();
+        }
+        
+        // Se a aba for de metas, atualiza as tabelas de metas
+        if (tabId === 'metas') {
+          atualizarTabelasMetas();
+        }
+      });
+    });
+    
+    // Preencher o select de anos para o calendário
+    const anoAtual = new Date().getFullYear();
+    const selectAno = document.getElementById('filtroAnoCalendario');
+    for (let i = anoAtual - 2; i <= anoAtual + 2; i++) {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = i;
+      if (i === anoAtual) {
+        option.selected = true;
+      }
+      selectAno.appendChild(option);
+    }
+    
+    // Definir o mês atual como selecionado
+    const mesAtual = new Date().getMonth();
+    document.getElementById('filtroMesCalendario').value = mesAtual;
+  });
+
+  function toggleSenha() {
+    const senhaInput = document.getElementById('senha');
+    senhaInput.type = document.getElementById('mostrarSenha').checked ? 'text' : 'password';
+  }
+
+  function fazerLogin() {
+    const login = document.getElementById("login").value;
+    const senha = document.getElementById("senha").value;
+    let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+
+    // Fallback: Garante que o usuário admin esteja sempre presente para login
+    const adminUser = { login: "admin", senha: "admin123", tipo: "admin", turno: "manha" };
+    const adminExists = usuarios.some(u => u.login === "admin");
+    if (!adminExists) {
+      usuarios.unshift(adminUser);
+      localStorage.setItem("usuarios", JSON.stringify(usuarios));
+    } else {
+      // Atualiza a senha do admin se ela foi alterada no código e não no localStorage
+      const currentAdmin = usuarios.find(u => u.login === "admin");
+      if (currentAdmin && currentAdmin.senha !== adminUser.senha) {
+        usuarios = usuarios.map(u => u.login === "admin" ? adminUser : u);
+        localStorage.setItem("usuarios", JSON.stringify(usuarios));
+      }
+    }
+
+    console.log("Tentativa de login para:", login);
+    console.log("Usuários carregados do localStorage (após fallback):", usuarios);
+
+    const user = usuarios.find(u => u.login.toLowerCase() === login.toLowerCase() && u.senha === senha);
+    if (user) {
+      usuarioLogado = user;
+      document.getElementById('usuarioNome').textContent = user.login;
+      document.getElementById('usuarioTipo').textContent = user.tipo;
+      document.getElementById('loginDiv').classList.add('hidden');
+      document.getElementById('app').classList.remove('hidden');
+      document.getElementById('botaoSairTopo').style.display = 'block';
+
+      if (user.tipo === 'admin') {
+        document.getElementById('adminPanel').classList.remove('hidden');
+        document.getElementById('adminBackupBtn').style.display = 'block';
+        document.getElementById('toggleBackupAutoSpan').style.display = 'inline-block';
+        document.getElementById('tabelasRanking').style.display = 'block';
+        document.getElementById('posicaoUsuario').style.display = 'none';
+      } else {
+        document.getElementById('adminPanel').classList.add('hidden');
+        document.getElementById('adminBackupBtn').style.display = 'none';
+        document.getElementById('toggleBackupAutoSpan').style.display = 'none';
+        document.getElementById('tabelasRanking').style.display = 'none';
+        document.getElementById('posicaoUsuario').style.display = 'block';
+      }
+
+      desenharCalendarios();
+      preencherFiltroMes();
+      atualizarTabelasRanking();
+      atualizarListaFolgas();
+      preencherListaUsuarios();
+      preencherUsuariosRanking();
+      backupAutomaticoSeAtivo();
+    } else {
+      alert('Login ou senha incorretos!');
+    }
+  }
+
+  function logout() {
+    usuarioLogado = null;
+    document.getElementById('loginDiv').classList.remove('hidden');
+    document.getElementById('app').classList.add('hidden');
+    document.getElementById('botaoSairTopo').style.display = 'none';
+    document.getElementById('login').value = '';
+    document.getElementById('senha').value = '';
+  }
+
+  function cadastrarUsuario() {
+    const login = document.getElementById('novoLogin').value;
+    const senha = document.getElementById('novaSenha').value;
+    const tipo = document.getElementById('novoTipo').value;
+    const turno = document.getElementById('novoTurno').value;
+
+    if (!login || !senha) {
+      alert('Preencha todos os campos!');
+      return;
+    }
+
+    const usuarios = JSON.parse(localStorage.getItem('usuarios'));
+    if (usuarios.some(u => u.login.toLowerCase() === login.toLowerCase())) {
+      alert('Login já existe!');
+      return;
+    }
+
+    usuarios.push({ login, senha, tipo, turno });
+    localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    alert('Usuário cadastrado com sucesso!');
+    document.getElementById('novoLogin').value = '';
+    document.getElementById('novaSenha').value = '';
+    preencherListaUsuarios();
+    preencherUsuariosRanking();
+    backupAutomaticoSeAtivo();
+  }
+
+  function preencherListaUsuarios() {
+    const usuarios = JSON.parse(localStorage.getItem('usuarios'));
+    const select = document.getElementById('listaUsuariosSelect');
+    const selectFolga = document.getElementById('usuarioFolgaSelect');
+    const selectEditarFolga = document.getElementById('usuarioEditarFolgaSelect');
+    const selectVisualizarFuncionario = document.getElementById('visualizarFuncionarioSelect');
+
+    // Limpar selects
+    select.innerHTML = '';
+    selectFolga.innerHTML = '';
+    selectEditarFolga.innerHTML = '';
+    selectVisualizarFuncionario.innerHTML = '';
+
+    // Preencher selects
+    usuarios.forEach(usuario => {
+      // Select de lista de usuários
+      const option = document.createElement('option');
+      option.value = usuario.login;
+      option.textContent = `${usuario.login} (${usuario.tipo}, ${usuario.turno === 'manha' ? 'Manhã' : 'Tarde'})`;
+      select.appendChild(option);
+
+      // Select de folga
+      const optionFolga = document.createElement('option');
+      optionFolga.value = usuario.login;
+      optionFolga.textContent = usuario.login;
+      selectFolga.appendChild(optionFolga);
+
+      // Select de editar folga
+      const optionEditarFolga = document.createElement('option');
+      optionEditarFolga.value = usuario.login;
+      optionEditarFolga.textContent = usuario.login;
+      selectEditarFolga.appendChild(optionEditarFolga);
+
+      // Select de visualizar funcionário
+      const optionVisualizarFuncionario = document.createElement('option');
+      optionVisualizarFuncionario.value = usuario.login;
+      optionVisualizarFuncionario.textContent = usuario.login;
+      selectVisualizarFuncionario.appendChild(optionVisualizarFuncionario);
+    });
+
+    // Inicializar selects
+    if (select.options.length > 0) {
+      select.selectedIndex = 0;
+      selectFolga.selectedIndex = 0;
+      selectEditarFolga.selectedIndex = 0;
+      selectVisualizarFuncionario.selectedIndex = 0;
+      popularFolgasParaEdicao();
+    }
+  }
+
+  function alterarUsuario() {
+    const login = document.getElementById('listaUsuariosSelect').value;
+    const novoLogin = document.getElementById('editarLogin').value;
+    const novaSenha = document.getElementById('editarSenha').value;
+    const novoTipo = document.getElementById('editarTipo').value;
+    const novoTurno = document.getElementById('editarTurno').value;
+
+    if (!login) {
+      alert('Selecione um usuário!');
+      return;
+    }
+
+    const usuarios = JSON.parse(localStorage.getItem('usuarios'));
+    const index = usuarios.findIndex(u => u.login === login);
+    if (index === -1) {
+      alert('Usuário não encontrado!');
+      return;
+    }
+
+    // Verificar se o novo login já existe (exceto se for o mesmo)
+    if (novoLogin && novoLogin !== login && usuarios.some(u => u.login.toLowerCase() === novoLogin.toLowerCase())) {
+      alert('Novo login já existe!');
+      return;
+    }
+
+    // Atualizar usuário
+    if (novoLogin) usuarios[index].login = novoLogin;
+    if (novaSenha) usuarios[index].senha = novaSenha;
+    if (novoTipo) usuarios[index].tipo = novoTipo;
+    if (novoTurno) usuarios[index].turno = novoTurno;
+
+    localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    alert('Usuário alterado com sucesso!');
+    document.getElementById('editarLogin').value = '';
+    document.getElementById('editarSenha').value = '';
+    preencherListaUsuarios();
+    preencherUsuariosRanking();
+    backupAutomaticoSeAtivo();
+  }
+
+  function removerUsuario() {
+    const login = document.getElementById('listaUsuariosSelect').value;
+    if (!login) {
+      alert('Selecione um usuário!');
+      return;
+    }
+
+    if (!confirm(`Tem certeza que deseja remover o usuário ${login}?`)) {
+      return;
+    }
+
+    const usuarios = JSON.parse(localStorage.getItem('usuarios'));
+    const index = usuarios.findIndex(u => u.login === login);
+    if (index === -1) {
+      alert('Usuário não encontrado!');
+      return;
+    }
+
+    usuarios.splice(index, 1);
+    localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    alert('Usuário removido com sucesso!');
+    preencherListaUsuarios();
+    preencherUsuariosRanking();
+    backupAutomaticoSeAtivo();
+  }
+
+  function alterarSenha() {
+    const novaSenha = document.getElementById('novaSenhaUsuario').value;
+    if (!novaSenha) {
+      alert('Digite a nova senha!');
+      return;
+    }
+
+    const usuarios = JSON.parse(localStorage.getItem('usuarios'));
+    const index = usuarios.findIndex(u => u.login === usuarioLogado.login);
+    if (index === -1) {
+      alert('Erro ao alterar senha!');
+      return;
+    }
+
+    usuarios[index].senha = novaSenha;
+    localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    usuarioLogado.senha = novaSenha;
+    alert('Senha alterada com sucesso!');
+    document.getElementById('novaSenhaUsuario').value = '';
+    backupAutomaticoSeAtivo();
+  }
+
+  function atribuirFolga() {
+    const login = document.getElementById('usuarioFolgaSelect').value;
+    const datasStr = document.getElementById('folgaAdminData').value;
+
+    if (!login || !datasStr) {
+      alert('Selecione um usuário e pelo menos uma data!');
+      return;
+    }
+
+    const datas = datasStr.split(',').map(d => d.trim());
+    if (datas.length === 0) {
+      alert('Selecione pelo menos uma data!');
+      return;
+    }
+
+    // Obter folgas existentes
+    const folgas = JSON.parse(localStorage.getItem('folgas') || '{}');
+    if (!folgas[login]) {
+      folgas[login] = [];
+    }
+
+    // Adicionar novas folgas
+    datas.forEach(data => {
+      if (!folgas[login].includes(data)) {
+        folgas[login].push(data);
+      }
+    });
+
+    // Salvar folgas
+    localStorage.setItem('folgas', JSON.stringify(folgas));
+    alert('Folga(s) atribuída(s) com sucesso!');
+    document.getElementById('folgaAdminData').value = '';
+    atualizarListaFolgas();
+    desenharCalendarios();
+    desenharCalendariosFuncionario();
+    atualizarCalendarioFolgas();
+    backupAutomaticoSeAtivo();
+  }
+
+  function popularFolgasParaEdicao() {
+    const login = document.getElementById('usuarioEditarFolgaSelect').value;
+    const select = document.getElementById('dataFolgaEditarSelect');
+    select.innerHTML = '';
+
+    if (!login) return;
+
+    const folgas = JSON.parse(localStorage.getItem('folgas') || '{}');
+    const datasUsuario = folgas[login] || [];
+
+    if (datasUsuario.length === 0) {
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = 'Nenhuma folga cadastrada';
+      select.appendChild(option);
+      return;
+    }
+
+    // Ordenar datas
+    datasUsuario.sort();
+
+    // Preencher select
+    datasUsuario.forEach(data => {
+      const option = document.createElement('option');
+      option.value = data;
+      option.textContent = formatarData(data);
+      select.appendChild(option);
+    });
+  }
+
+  function editarFolga() {
+    const login = document.getElementById('usuarioEditarFolgaSelect').value;
+    const dataAntiga = document.getElementById('dataFolgaEditarSelect').value;
+    const dataNova = document.getElementById('novaDataFolgaInput').value;
+
+    if (!login || !dataAntiga || !dataNova) {
+      alert('Preencha todos os campos!');
+      return;
+    }
+
+    const folgas = JSON.parse(localStorage.getItem('folgas') || '{}');
+    if (!folgas[login]) {
+      alert('Usuário não possui folgas!');
+      return;
+    }
+
+    const index = folgas[login].indexOf(dataAntiga);
+    if (index === -1) {
+      alert('Folga não encontrada!');
+      return;
+    }
+
+    // Verificar se a nova data já existe
+    if (folgas[login].includes(dataNova)) {
+      alert('Usuário já possui folga nesta data!');
+      return;
+    }
+
+    // Atualizar folga
+    folgas[login][index] = dataNova;
+    localStorage.setItem('folgas', JSON.stringify(folgas));
+    alert('Folga editada com sucesso!');
+    document.getElementById('novaDataFolgaInput').value = '';
+    popularFolgasParaEdicao();
+    atualizarListaFolgas();
+    desenharCalendarios();
+    desenharCalendariosFuncionario();
+    atualizarCalendarioFolgas();
+    backupAutomaticoSeAtivo();
+  }
+
+  function excluirFolga() {
+    const login = document.getElementById('usuarioEditarFolgaSelect').value;
+    const data = document.getElementById('dataFolgaEditarSelect').value;
+
+    if (!login || !data) {
+      alert('Selecione um usuário e uma data!');
+      return;
+    }
+
+    const folgas = JSON.parse(localStorage.getItem('folgas') || '{}');
+    if (!folgas[login]) {
+      alert('Usuário não possui folgas!');
+      return;
+    }
+
+    const index = folgas[login].indexOf(data);
+    if (index === -1) {
+      alert('Folga não encontrada!');
+      return;
+    }
+
+    // Remover folga
+    folgas[login].splice(index, 1);
+    localStorage.setItem('folgas', JSON.stringify(folgas));
+    alert('Folga excluída com sucesso!');
+    popularFolgasParaEdicao();
+    atualizarListaFolgas();
+    desenharCalendarios();
+    desenharCalendariosFuncionario();
+    atualizarCalendarioFolgas();
+    backupAutomaticoSeAtivo();
+  }
+
+  function atualizarListaFolgas() {
+    const div = document.getElementById('listaFolgas');
+    div.innerHTML = '';
+
+    const folgas = JSON.parse(localStorage.getItem('folgas') || '{}');
+    const usuarios = Object.keys(folgas);
+
+    if (usuarios.length === 0) {
+      div.textContent = 'Nenhuma folga cadastrada.';
+      return;
+    }
+
+    // Ordenar usuários
+    usuarios.sort();
+
+    // Criar lista de folgas
+    usuarios.forEach(usuario => {
+      const datasUsuario = folgas[usuario] || [];
+      if (datasUsuario.length === 0) return;
+
+      // Ordenar datas
+      datasUsuario.sort();
+
+      const p = document.createElement('p');
+      p.innerHTML = `<strong>${usuario}</strong>: ${datasUsuario.map(d => formatarData(d)).join(', ')}`;
+      div.appendChild(p);
+    });
+  }
+
+  function formatarData(dataStr) {
+    const data = new Date(dataStr);
+    return data.toLocaleDateString('pt-BR');
+  }
+
+  function desenharCalendarios() {
+    const div = document.getElementById('calendarios');
+    div.innerHTML = '';
+
+    // Obter folgas do usuário logado
+    const folgas = JSON.parse(localStorage.getItem('folgas') || '{}');
+    const datasUsuario = folgas[usuarioLogado.login] || [];
+
+    // Obter ano atual
+    const anoAtual = new Date().getFullYear();
+
+    // Criar calendários para cada mês
+    for (let mes = 0; mes < 12; mes++) {
+      const divMes = document.createElement('div');
+      divMes.className = 'mesTitulo';
+      divMes.textContent = obterNomeMes(mes);
+      div.appendChild(divMes);
+
+      // Criar tabela do mês
+      const tabela = document.createElement('table');
+      
+      // Cabeçalho da tabela
+      const thead = document.createElement('thead');
+      const trHead = document.createElement('tr');
+      ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].forEach(dia => {
+        const th = document.createElement('th');
+        th.textContent = dia;
+        trHead.appendChild(th);
+      });
+      thead.appendChild(trHead);
+      tabela.appendChild(thead);
+
+      // Corpo da tabela
+      const tbody = document.createElement('tbody');
+      
+      // Obter primeiro dia do mês e total de dias
+      const primeiroDia = new Date(anoAtual, mes, 1);
+      const ultimoDia = new Date(anoAtual, mes + 1, 0);
+      const totalDias = ultimoDia.getDate();
+      
+      // Obter dia da semana do primeiro dia (0 = Domingo, 6 = Sábado)
+      const diaSemana = primeiroDia.getDay();
+      
+      // Criar linhas do calendário
+      let dia = 1;
+      for (let i = 0; i < 6; i++) {
+        const tr = document.createElement('tr');
+        
+        // Criar células
+        for (let j = 0; j < 7; j++) {
+          const td = document.createElement('td');
+          
+          // Verificar se é um dia válido
+          if ((i === 0 && j < diaSemana) || dia > totalDias) {
+            // Célula vazia
+            td.textContent = '';
+          } else {
+            // Célula com dia
+            td.textContent = dia;
+            
+            // Verificar se é um dia de folga
+            const dataStr = `${anoAtual}-${(mes + 1).toString().padStart(2, '0')}-${dia.toString().padStart(2, '0')}`;
+            if (datasUsuario.includes(dataStr)) {
+              td.className = 'folga';
+            }
+            
+            dia++;
+          }
+          
+          tr.appendChild(td);
+        }
+        
+        tbody.appendChild(tr);
+        
+        // Verificar se já mostrou todos os dias
+        if (dia > totalDias) break;
+      }
+      
+      tabela.appendChild(tbody);
+      div.appendChild(tabela);
+    }
+  }
+
+  function desenharCalendariosFuncionario() {
+    const div = document.getElementById('calendarioFuncionario');
+    div.innerHTML = '';
+
+    // Obter usuário selecionado
+    const login = document.getElementById('visualizarFuncionarioSelect').value;
+    if (!login) return;
+
+    // Obter folgas do usuário
+    const folgas = JSON.parse(localStorage.getItem('folgas') || '{}');
+    const datasUsuario = folgas[login] || [];
+
+    // Obter ano atual
+    const anoAtual = new Date().getFullYear();
+
+    // Criar calendários para cada mês
+    for (let mes = 0; mes < 12; mes++) {
+      const divMes = document.createElement('div');
+      divMes.className = 'mesTitulo';
+      divMes.textContent = obterNomeMes(mes);
+      div.appendChild(divMes);
+
+      // Criar tabela do mês
+      const tabela = document.createElement('table');
+      
+      // Cabeçalho da tabela
+      const thead = document.createElement('thead');
+      const trHead = document.createElement('tr');
+      ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].forEach(dia => {
+        const th = document.createElement('th');
+        th.textContent = dia;
+        trHead.appendChild(th);
+      });
+      thead.appendChild(trHead);
+      tabela.appendChild(thead);
+
+      // Corpo da tabela
+      const tbody = document.createElement('tbody');
+      
+      // Obter primeiro dia do mês e total de dias
+      const primeiroDia = new Date(anoAtual, mes, 1);
+      const ultimoDia = new Date(anoAtual, mes + 1, 0);
+      const totalDias = ultimoDia.getDate();
+      
+      // Obter dia da semana do primeiro dia (0 = Domingo, 6 = Sábado)
+      const diaSemana = primeiroDia.getDay();
+      
+      // Criar linhas do calendário
+      let dia = 1;
+      for (let i = 0; i < 6; i++) {
+        const tr = document.createElement('tr');
+        
+        // Criar células
+        for (let j = 0; j < 7; j++) {
+          const td = document.createElement('td');
+          
+          // Verificar se é um dia válido
+          if ((i === 0 && j < diaSemana) || dia > totalDias) {
+            // Célula vazia
+            td.textContent = '';
+          } else {
+            // Célula com dia
+            td.textContent = dia;
+            
+            // Verificar se é um dia de folga
+            const dataStr = `${anoAtual}-${(mes + 1).toString().padStart(2, '0')}-${dia.toString().padStart(2, '0')}`;
+            if (datasUsuario.includes(dataStr)) {
+              td.className = 'folga';
+            }
+            
+            dia++;
+          }
+          
+          tr.appendChild(td);
+        }
+        
+        tbody.appendChild(tr);
+        
+        // Verificar se já mostrou todos os dias
+        if (dia > totalDias) break;
+      }
+      
+      tabela.appendChild(tbody);
+      div.appendChild(tabela);
+    }
+  }
+
+  function obterNomeMes(mes) {
+    const meses = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    return meses[mes];
+  }
+
+  // Funções para o ranking
+  function preencherUsuariosRanking() {
+    const usuarios = JSON.parse(localStorage.getItem('usuarios'));
+    const select = document.getElementById('usuarioRankingSelect');
+    select.innerHTML = '';
+
+    // Filtrar apenas funcionários se o usuário logado for funcionário
+    const usuariosFiltrados = usuarioLogado.tipo === 'admin' 
+      ? usuarios 
+      : usuarios.filter(u => u.login === usuarioLogado.login);
+
+    // Preencher select
+    usuariosFiltrados.forEach(usuario => {
+      const option = document.createElement('option');
+      option.value = usuario.login;
+      option.textContent = usuario.login;
+      select.appendChild(option);
+    });
+
+    // Selecionar usuário logado por padrão
+    if (usuarioLogado.tipo !== 'admin') {
+      select.value = usuarioLogado.login;
+    }
+  }
+
+  function preencherFiltroMes() {
+    const select = document.getElementById('filtroMesSelect');
+    select.innerHTML = '';
+
+    // Adicionar opção para todos os meses
+    const optionTodos = document.createElement('option');
+    optionTodos.value = 'todos';
+    optionTodos.textContent = 'Todos os Meses';
+    select.appendChild(optionTodos);
+
+    // Adicionar opções para cada mês
+    const meses = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+
+    meses.forEach((mes, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = mes;
+      select.appendChild(option);
+    });
+
+    // Selecionar mês atual por padrão
+    const mesAtual = new Date().getMonth();
+    select.value = mesAtual;
+  }
+
+  function adicionarDadosRanking() {
+    const login = document.getElementById('usuarioRankingSelect').value;
+    const data = document.getElementById('dataRanking').value;
+    const totalVendas = parseInt(document.getElementById('totalVendas').value) || 0;
+    const totalAbastecimentos = parseInt(document.getElementById('totalAbastecimentos').value) || 0;
+
+    if (!login || !data) {
+      alert('Selecione um usuário e uma data!');
+      return;
+    }
+
+    // Obter ranking existente
+    const ranking = JSON.parse(localStorage.getItem('ranking') || '{}');
+    if (!ranking[login]) {
+      ranking[login] = {};
+    }
+
+    // Adicionar ou atualizar dados, preservando valores existentes se não forem fornecidos novos
+    const dadosExistentes = ranking[login][data] || { vendas: 0, abastecimentos: 0 };
+    const novasVendasInput = document.getElementById('totalVendas').value;
+    const novosAbastecimentosInput = document.getElementById('totalAbastecimentos').value;
+
+    // Usa o novo valor se fornecido, senão mantém o existente
+    const finalVendas = novasVendasInput !== '' ? (parseInt(novasVendasInput) || 0) : dadosExistentes.vendas;
+    const finalAbastecimentos = novosAbastecimentosInput !== '' ? (parseInt(novosAbastecimentosInput) || 0) : dadosExistentes.abastecimentos;
+
+    ranking[login][data] = {
+      vendas: finalVendas,
+      abastecimentos: finalAbastecimentos
+    };
+
+    // Salvar ranking
+    localStorage.setItem('ranking', JSON.stringify(ranking));
+    alert('Dados adicionados com sucesso!');
+    document.getElementById('totalVendas').value = '';
+    document.getElementById('totalAbastecimentos').value = '';
+    atualizarTabelasRanking();
+    backupAutomaticoSeAtivo();
+  }
+
+  function atualizarTabelasRanking() {
+    // Limpar tabelas
+    document.getElementById('rankingManhaTbody').innerHTML = '';
+    document.getElementById('rankingTardeTbody').innerHTML = '';
+
+    // Obter filtros
+    const filtroTurno = document.getElementById('filtroTurnoSelect').value;
+    const filtroMes = document.getElementById('filtroMesSelect').value;
+    const ordenacaoPor = document.getElementById('ordenacaoRankingSelect').value;
+
+    // Obter dados
+    const ranking = JSON.parse(localStorage.getItem('ranking') || '{}');
+    const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+
+    // Calcular totais por usuário
+    const totais = {};
+    
+    usuarios.forEach(usuario => {
+      const login = usuario.login;
+      const turno = usuario.turno;
+      
+      // Inicializar totais
+      totais[login] = {
+        login,
+        turno,
+        totalVendas: 0,
+        totalAbastecimentos: 0
+      };
+      
+      // Somar dados do usuário
+      const dadosUsuario = ranking[login] || {};
+      
+      Object.entries(dadosUsuario).forEach(([data, valores]) => {
+        // Verificar filtro de mês
+        if (filtroMes !== 'todos') {
+          const dataObj = new Date(data + 'T00:00:00'); // Adiciona T00:00:00 para evitar problemas de fuso horário
+          const mes = dataObj.getMonth();
+          if (mes !== parseInt(filtroMes)) return;
+        }
+        
+        // Somar valores
+        const totalVendasDia = valores.vendas || 0;
+        const totalAbastecimentosDia = valores.abastecimentos || 0;
+        
+        totais[login].totalVendas += totalVendasDia;
+        totais[login].totalAbastecimentos += totalAbastecimentosDia;
+      });
+    });
+    
+    // Ordenar usuários conforme seleção (vendas ou abastecimentos)
+    const compararPor = ordenacaoPor === "vendas" 
+      ? (a, b) => b.totalVendas - a.totalVendas 
+      : (a, b) => b.totalAbastecimentos - a.totalAbastecimentos;
+    
+    // Filtrar usuários por turno APÓS calcular os totais mensais
+    const usuariosManha = Object.values(totais)
+      .filter(u => u.turno === "manha")
+      .sort(compararPor);
+      
+    const usuariosTarde = Object.values(totais)
+      .filter(u => u.turno === "tarde")
+      .sort(compararPor);
+    
+    // Se for funcionário, mostrar apenas sua posição no ranking do mês
+    if (usuarioLogado && usuarioLogado.tipo !== "admin") {
+      // Determinar a lista de usuários a ser considerada com base no filtro de turno
+      let usuariosParaComparacao = [];
+      if (filtroTurno === "todos") {
+        usuariosParaComparacao = [...usuariosManha, ...usuariosTarde];
+      } else if (filtroTurno === "manha") {
+        usuariosParaComparacao = usuariosManha;
+      } else if (filtroTurno === "tarde") {
+        usuariosParaComparacao = usuariosTarde;
+      }
+
+      // Ordenar a lista filtrada por turno para encontrar a posição
+      const usuariosFiltradosVendas = [...usuariosParaComparacao].sort((a, b) => b.totalVendas - a.totalVendas);
+      const usuariosFiltradosAbastecimentos = [...usuariosParaComparacao].sort((a, b) => b.totalAbastecimentos - a.totalAbastecimentos);
+      
+      // Encontrar posição do usuário na lista filtrada
+      const posicaoVendas = usuariosFiltradosVendas.findIndex(u => u.login === usuarioLogado.login) + 1;
+      const posicaoAbastecimentos = usuariosFiltradosAbastecimentos.findIndex(u => u.login === usuarioLogado.login) + 1;
+      
+      // Atualizar informações na interface
+      const dadosUsuarioMes = totais[usuarioLogado.login] || { totalVendas: 0, totalAbastecimentos: 0 };
+      
+      // Mostrar posição apenas se o usuário estiver no turno filtrado (ou se o filtro for 'todos')
+      // E se o usuário tiver dados no período
+      let textoPosicaoVendas = "Sem classificação";
+      let textoPosicaoAbastecimentos = "Sem classificação";
+
+      if (filtroTurno === 'todos' || usuarioLogado.turno === filtroTurno) {
+          if (posicaoVendas > 0 && dadosUsuarioMes.totalVendas > 0) {
+              textoPosicaoVendas = `${posicaoVendas}º lugar (no turno ${filtroTurno === 'todos' ? 'geral' : filtroTurno})`;
+          }
+          if (posicaoAbastecimentos > 0 && dadosUsuarioMes.totalAbastecimentos > 0) {
+              textoPosicaoAbastecimentos = `${posicaoAbastecimentos}º lugar (no turno ${filtroTurno === 'todos' ? 'geral' : filtroTurno})`;
+          }
+      } else {
+          textoPosicaoVendas = "Fora do turno filtrado";
+          textoPosicaoAbastecimentos = "Fora do turno filtrado";
+      }
+
+      document.getElementById("posicaoVendas").textContent = textoPosicaoVendas;
+      document.getElementById("posicaoAbastecimentos").textContent = textoPosicaoAbastecimentos;
+      document.getElementById("totalVendasUsuario").textContent = dadosUsuarioMes.totalVendas;
+      document.getElementById("totalAbastecimentosUsuario").textContent = dadosUsuarioMes.totalAbastecimentos;
+      
+      // Atualizar dados detalhados também para o funcionário
+      atualizarDadosDetalhadosDiarios(); // Chamada mantida aqui
+      
+      return; // Não precisa preencher as tabelas para funcionários
+    }
+    
+    // Para administradores, preencher tabelas completas com dados mensais
+    // Preencher tabela da manhã
+    const tbodyManha = document.getElementById("rankingManhaTbody");
+    if (filtroTurno === "todos" || filtroTurno === "manha") {
+      const usuariosManhaComDados = usuariosManha.filter(u => u.totalVendas > 0 || u.totalAbastecimentos > 0);
+      if (usuariosManhaComDados.length === 0) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = '<td colspan="3">Nenhum dado disponível para este filtro</td>';
+        tbodyManha.appendChild(tr);
+      } else {
+        usuariosManhaComDados.forEach(usuario => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${usuario.login}</td>
+            <td>${usuario.totalVendas}</td>
+            <td>${usuario.totalAbastecimentos}</td>
+          `;
+          tbodyManha.appendChild(tr);
+        });
+      }
+    } else {
+      const tr = document.createElement("tr");
+      tr.innerHTML = '<td colspan="3">Filtro aplicado para outro turno</td>';
+      tbodyManha.appendChild(tr);
+    }
+    
+    // Preencher tabela da tarde
+    const tbodyTarde = document.getElementById("rankingTardeTbody");
+    if (filtroTurno === "todos" || filtroTurno === "tarde") {
+      const usuariosTardeComDados = usuariosTarde.filter(u => u.totalVendas > 0 || u.totalAbastecimentos > 0);
+      if (usuariosTardeComDados.length === 0) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = '<td colspan="3">Nenhum dado disponível para este filtro</td>';
+        tbodyTarde.appendChild(tr);
+      } else {
+        usuariosTardeComDados.forEach(usuario => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${usuario.login}</td>
+            <td>${usuario.totalVendas}</td>
+            <td>${usuario.totalAbastecimentos}</td>
+          `;
+          tbodyTarde.appendChild(tr);
+        });
+      }
+    } else {
+      const tr = document.createElement("tr");
+      tr.innerHTML = '<td colspan="3">Filtro aplicado para outro turno</td>';
+      tbodyTarde.appendChild(tr);
+    }
+    
+    // Atualizar a lista de dados detalhados
+    atualizarDadosDetalhadosDiarios(); // Chamada adicionada aqui
+  }
+  
+  // Função para atualizar o calendário de folgas (nova aba)
+  function atualizarCalendarioFolgas() {
+    const divCalendario = document.getElementById('calendarioFolgas');
+    divCalendario.innerHTML = '';
+    
+    // Obter mês, ano e turno selecionados
+    const mesSelecionado = document.getElementById('filtroMesCalendario').value;
+    const ano = parseInt(document.getElementById('filtroAnoCalendario').value);
+    const turnoFiltro = document.getElementById('filtroTurnoCalendario').value;
+    
+    // Obter folgas de todos os usuários
+    const folgas = JSON.parse(localStorage.getItem('folgas') || '{}');
+    const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+    
+    // Determinar quais meses exibir
+    const mesesParaExibir = mesSelecionado === 'todos' 
+      ? Array.from({length: 12}, (_, i) => i) // Todos os meses (0-11)
+      : [parseInt(mesSelecionado)]; // Apenas o mês selecionado
+    
+    // Para cada mês a ser exibido
+    mesesParaExibir.forEach(mes => {
+      // Criar div do mês
+      const divMes = document.createElement('div');
+      divMes.className = 'calendario-mes';
+      
+      // Adicionar título do mês
+      const h3 = document.createElement('h3');
+      h3.textContent = `${obterNomeMes(mes)} de ${ano}`;
+      divMes.appendChild(h3);
+      
+      // Criar grid do calendário
+      const divGrid = document.createElement('div');
+      divGrid.className = 'calendario-grid';
+      
+      // Adicionar cabeçalhos dos dias da semana
+      const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+      diasSemana.forEach(dia => {
+        const divDia = document.createElement('div');
+        divDia.className = 'dia-header';
+        divDia.textContent = dia;
+        divGrid.appendChild(divDia);
+      });
+      
+      // Obter primeiro dia do mês e total de dias
+      const primeiroDia = new Date(ano, mes, 1);
+      const ultimoDia = new Date(ano, mes + 1, 0);
+      const totalDias = ultimoDia.getDate();
+      
+      // Obter dia da semana do primeiro dia (0 = Domingo, 6 = Sábado)
+      const diaSemana = primeiroDia.getDay();
+      
+      // Adicionar células vazias para os dias antes do início do mês
+      for (let i = 0; i < diaSemana; i++) {
+        const divCelula = document.createElement('div');
+        divCelula.className = 'dia-celula dia-vazio';
+        divGrid.appendChild(divCelula);
+      }
+      
+      // Data atual para destacar o dia de hoje
+      const hoje = new Date();
+      const diaHoje = hoje.getDate();
+      const mesHoje = hoje.getMonth();
+      const anoHoje = hoje.getFullYear();
+      
+      // Adicionar células para cada dia do mês
+      for (let dia = 1; dia <= totalDias; dia++) {
+        const divCelula = document.createElement('div');
+        divCelula.className = 'dia-celula';
+        
+        // Destacar o dia de hoje
+        if (dia === diaHoje && mes === mesHoje && ano === anoHoje) {
+          divCelula.classList.add('hoje');
+        }
+        
+        // Adicionar número do dia
+        const divNumero = document.createElement('div');
+        divNumero.className = 'dia-numero';
+        divNumero.textContent = dia;
+        divCelula.appendChild(divNumero);
+        
+        // Adicionar div para folgas
+        const divFolgas = document.createElement('div');
+        divFolgas.className = 'dia-folgas';
+        
+        // Verificar quais funcionários estão de folga neste dia
+        const dataStr = `${ano}-${(mes + 1).toString().padStart(2, '0')}-${dia.toString().padStart(2, '0')}`;
+        const funcionariosFolga = [];
+        
+        Object.entries(folgas).forEach(([login, datas]) => {
+          if (datas.includes(dataStr)) {
+            // Encontrar informações do usuário
+            const usuario = usuarios.find(u => u.login === login);
+            if (usuario) {
+              // Aplicar filtro de turno
+              if (turnoFiltro === 'todos' || usuario.turno === turnoFiltro) {
+                funcionariosFolga.push({
+                  login,
+                  turno: usuario.turno
+                });
+              }
+            } else {
+              // Se não encontrar o usuário e o filtro for 'todos', incluir mesmo assim
+              if (turnoFiltro === 'todos') {
+                funcionariosFolga.push({
+                  login,
+                  turno: 'desconhecido'
+                });
+              }
+            }
+          }
+        });
+        
+        // Ordenar funcionários por turno e depois por login
+        funcionariosFolga.sort((a, b) => {
+          if (a.turno === b.turno) {
+            return a.login.localeCompare(b.login);
+          }
+          return a.turno === 'manha' ? -1 : 1;
+        });
+        
+        // Adicionar spans para cada funcionário de folga
+        funcionariosFolga.forEach(funcionario => {
+          const span = document.createElement('span');
+          span.textContent = `${funcionario.login} (${funcionario.turno === 'manha' ? 'Manhã' : 'Tarde'})`;
+          divFolgas.appendChild(span);
+        });
+        
+        divCelula.appendChild(divFolgas);
+      divGrid.appendChild(divCelula);
+    }
+    
+    // Adicionar células vazias para completar a última semana
+    const diasRestantes = 7 - ((diaSemana + totalDias) % 7);
+    if (diasRestantes < 7) {
+      for (let i = 0; i < diasRestantes; i++) {
+        const divCelula = document.createElement('div');
+        divCelula.className = 'dia-celula dia-vazio';
+        divGrid.appendChild(divCelula);
+      }
+    }
+    
+    divMes.appendChild(divGrid);
+    divCalendario.appendChild(divMes);
+    });
+  }
+  
+  async function backupParaFirebase() {
+    // Obter todos os dados do sistema
+    const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+    const folgas = JSON.parse(localStorage.getItem('folgas') || '{}');
+    const ranking = JSON.parse(localStorage.getItem('ranking') || '{}');
+    const metaGeral = localStorage.getItem('metaGeral') || '1000'; // Incluir meta geral no backup
+
+    try {
+      // Salvar dados no Firebase
+      await salvarUsuariosNoFirebase(usuarios);
+      await salvarFolgasNoFirebase(folgas);
+      await salvarRankingNoFirebase(ranking);
+      await salvarMetaGeralNoFirebase(metaGeral); // Nova função para salvar meta geral
+      
+      alert('Backup realizado com sucesso no Firebase!');
+    } catch (error) {
+      console.error('Erro ao fazer backup:', error);
+      alert('Erro ao fazer backup: ' + error.message);
+    }
+  }
+
+  async function salvarUsuariosNoFirebase(usuarios) {
+    const batch = db.batch();
+    for (const usuario of usuarios) {
+      const ref = db.collection("usuarios").doc(usuario.login);
+      batch.set(ref, usuario);
+    }
+    await batch.commit();
+  }
+
+  async function salvarFolgasNoFirebase(folgas) {
+    const batch = db.batch();
+    for (const [usuario, datas] of Object.entries(folgas)) {
+      const ref = db.collection("folgas").doc(usuario);
+      batch.set(ref, { datas });
+    }
+    await batch.commit();
+  }
+
+  async function salvarRankingNoFirebase(ranking) {
+    const batch = db.batch();
+    for (const [usuario, registros] of Object.entries(ranking)) {
+      const ref = db.collection("ranking").doc(usuario);
+      batch.set(ref, { registros });
+    }
+    await batch.commit();
+  }
+
+  // Nova função para salvar meta geral no Firebase
+  async function salvarMetaGeralNoFirebase(metaGeral) {
+    const ref = db.collection("configuracoes").doc("metaGeral");
+    await ref.set({ valor: metaGeral });
+  }
+
+  function alternarTema() {
+    document.body.classList.toggle('tema-escuro');
+  }
+
+  let backupAutoAtivo = false;
+
+  function alternarBackupAuto() {
+    backupAutoAtivo = document.getElementById('toggleBackupAuto').checked;
+    console.log("Backup automático está " + (backupAutoAtivo ? "ATIVADO" : "DESATIVADO"));
+  }
+
+  async function backupAutomaticoSeAtivo() {
+    if (backupAutoAtivo) {
+      const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+      const folgas = JSON.parse(localStorage.getItem('folgas') || '{}');
+      const ranking = JSON.parse(localStorage.getItem('ranking') || '{}');
+      const metaGeral = localStorage.getItem('metaGeral') || '1000'; // Incluir meta geral no backup automático
+      try {
+        await salvarUsuariosNoFirebase(usuarios);
+        await salvarFolgasNoFirebase(folgas);
+        await salvarRankingNoFirebase(ranking);
+        await salvarMetaGeralNoFirebase(metaGeral); // Salvar meta geral automaticamente
+        console.log("[Backup automático] Backup realizado após alteração.");
+      } catch (e) {
+        console.error("[Backup automático] Erro ao fazer backup:", e);
+      }
+    }
+  }
+
+  // Função para atualizar a lista de dados detalhados por dia
+  function atualizarDadosDetalhadosDiarios() {
+    const divLista = document.getElementById('listaDadosDetalhados');
+    divLista.innerHTML = '<p>Carregando dados detalhados...</p>'; // Limpa e mostra carregando
+
+    // Obter filtros
+    const filtroTurno = document.getElementById('filtroTurnoSelect').value;
+    const filtroMes = document.getElementById('filtroMesSelect').value;
+
+    // Obter dados
+    const ranking = JSON.parse(localStorage.getItem('ranking') || '{}');
+    const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]'); // Necessário para obter turno do admin
+
+    let htmlContent = '';
+    let dadosEncontrados = false;
+
+    // Verificar se há usuário logado
+    if (!usuarioLogado) {
+        divLista.innerHTML = '<p>Erro: Usuário não está logado.</p>';
+        return;
+    }
+
+    // Função auxiliar para processar dados de um usuário específico
+    const processarUsuario = (usuarioLogin, usuarioTurno) => {
+        const dadosUsuario = ranking[usuarioLogin] || {};
+        const dadosFiltradosUsuario = [];
+
+        // Iterar sobre os dados diários do usuário
+        Object.entries(dadosUsuario).forEach(([data, valores]) => {
+            const dataObj = new Date(data + 'T00:00:00'); // Adiciona T00:00:00 para evitar problemas de fuso horário
+            const mesData = dataObj.getMonth();
+
+            // Aplicar filtro de mês
+            if (filtroMes === 'todos' || mesData === parseInt(filtroMes)) {
+                dadosFiltradosUsuario.push({
+                    data: data,
+                    vendas: valores.vendas || 0,
+                    abastecimentos: valores.abastecimentos || 0
+                });
+            }
+        });
+
+        // Ordenar os dados filtrados por data (mais recente primeiro)
+        dadosFiltradosUsuario.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+        // Se houver dados para este usuário após filtrar, adicioná-los ao HTML
+        if (dadosFiltradosUsuario.length > 0) {
+            dadosEncontrados = true;
+            // Para admin, mostrar nome do usuário. Para funcionário, usar "Seus dados".
+            if (usuarioLogado.tipo === 'admin') {
+                 htmlContent += `<h4>Usuário: ${usuarioLogin} (${usuarioTurno === 'manha' ? 'Manhã' : 'Tarde'})</h4>`;
+            } else {
+                 htmlContent += `<h4>Seus Dados Detalhados (${usuarioTurno === 'manha' ? 'Manhã' : 'Tarde'})</h4>`;
+            }
+            
+            dadosFiltradosUsuario.forEach(dado => {
+                // Formatar data para dd/mm/yyyy
+                const [ano, mes, dia] = dado.data.split('-');
+                const dataFormatada = `${dia}/${mes}/${ano}`;
+                
+                htmlContent += `
+                    <div class="dados-detalhados-item">
+                        <h5>${dataFormatada}</h5>
+                        <div class="dados-detalhados-info">
+                            <div class="dados-detalhados-valores">
+                                Vendas: ${dado.vendas} | Abastecimentos: ${dado.abastecimentos}
+                            </div>
+                            ${usuarioLogado.tipo === 'admin' ? `
+                            <div class="dados-detalhados-acoes">
+                                <button class="btn-editar" onclick="abrirModalEdicao('${usuarioLogin}', '${dado.data}', ${dado.vendas}, ${dado.abastecimentos})">Editar</button>
+                                <button class="btn-excluir" onclick="excluirDadosDia('${usuarioLogin}', '${dado.data}')">Excluir</button>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    };
+
+    // Lógica principal baseada no tipo de usuário
+    if (usuarioLogado.tipo === 'admin') {
+        // Admin: Iterar sobre todos os usuários respeitando o filtro de turno
+        usuarios.forEach(usuario => {
+            const login = usuario.login;
+            const turnoUsuario = usuario.turno;
+
+            // Aplicar filtro de turno
+            if (filtroTurno === 'todos' || turnoUsuario === filtroTurno) {
+                processarUsuario(login, turnoUsuario);
+            }
+        });
+    } else if (usuarioLogado.tipo === 'funcionario') {
+        // Funcionário: Processar apenas os dados do próprio usuário
+        // Aplicar filtro de turno (embora geralmente irrelevante para o próprio usuário, mantém consistência)
+        if (filtroTurno === 'todos' || usuarioLogado.turno === filtroTurno) {
+             processarUsuario(usuarioLogado.login, usuarioLogado.turno);
+        }
+    }
+
+    // Atualizar o conteúdo da div
+    if (dadosEncontrados) {
+        divLista.innerHTML = htmlContent;
+    } else {
+        // Mensagem diferente se for funcionário e não tiver dados
+        if (usuarioLogado.tipo === 'funcionario') {
+             divLista.innerHTML = '<p>Você ainda não possui dados detalhados para os filtros selecionados.</p>';
+        } else {
+             divLista.innerHTML = '<p>Nenhum dado detalhado encontrado para os filtros selecionados.</p>';
+        }
+    }
+  }
+
+  // Funções para o modal de edição
+  function abrirModalEdicao(usuario, data, vendas, abastecimentos) {
+    document.getElementById('modalUsuario').value = usuario;
+    document.getElementById('modalData').value = data;
+    document.getElementById('modalVendas').value = vendas;
+    document.getElementById('modalAbastecimentos').value = abastecimentos;
+    document.getElementById('modalEdicao').style.display = 'block';
+  }
+
+  function fecharModalEdicao() {
+    document.getElementById('modalEdicao').style.display = 'none';
+  }
+
+  function salvarEdicaoDados() {
+    const usuario = document.getElementById('modalUsuario').value;
+    const data = document.getElementById('modalData').value;
+    const vendas = parseInt(document.getElementById('modalVendas').value) || 0;
+    const abastecimentos = parseInt(document.getElementById('modalAbastecimentos').value) || 0;
+
+    if (!usuario || !data) {
+      alert('Dados inválidos!');
+      return;
+    }
+
+    // Obter ranking existente
+    const ranking = JSON.parse(localStorage.getItem('ranking') || '{}');
+    if (!ranking[usuario]) {
+      ranking[usuario] = {};
+    }
+
+    // Atualizar dados
+    ranking[usuario][data] = {
+      vendas: vendas,
+      abastecimentos: abastecimentos
+    };
+
+    // Salvar ranking
+    localStorage.setItem('ranking', JSON.stringify(ranking));
+    alert('Dados editados com sucesso!');
+    fecharModalEdicao();
+    atualizarTabelasRanking();
+    backupAutomaticoSeAtivo();
+  }
+
+  function excluirDadosDia(usuario, data) {
+    if (!confirm(`Tem certeza que deseja excluir os dados de ${usuario} do dia ${data}?`)) {
+      return;
+    }
+
+    // Obter ranking existente
+    const ranking = JSON.parse(localStorage.getItem('ranking') || '{}');
+    
+    if (ranking[usuario] && ranking[usuario][data]) {
+      delete ranking[usuario][data];
+      
+      // Se o usuário não tiver mais dados, remover o usuário do ranking
+      if (Object.keys(ranking[usuario]).length === 0) {
+        delete ranking[usuario];
+      }
+      
+      // Salvar ranking
+      localStorage.setItem('ranking', JSON.stringify(ranking));
+      alert('Dados excluídos com sucesso!');
+      atualizarTabelasRanking();
+      backupAutomaticoSeAtivo();
+    } else {
+      alert('Dados não encontrados!');
+    }
+  }
+
+  // Fechar modal ao clicar fora dele
+  window.onclick = function(event) {
+    const modal = document.getElementById('modalEdicao');
+    if (event.target === modal) {
+      fecharModalEdicao();
+    }
+  }
+
+  // Inicializar datepicker para o campo de data do ranking
+  document.addEventListener('DOMContentLoaded', function() {
+    flatpickr("#folgaAdminData", {
+      mode: "multiple",
+      dateFormat: "Y-m-d",
+      locale: "pt"
+    });
+    
+    flatpickr("#dataRanking", {
+      dateFormat: "Y-m-d",
+      locale: "pt",
+      defaultDate: new Date()
+    });
+
+    // Chamar a função de atualização inicial dos dados detalhados
+    // Isso garante que os dados sejam carregados quando a aba de ranking for exibida pela primeira vez
+    // (Pode ser necessário ajustar onde chamar isso dependendo da lógica de inicialização das abas)
+    if (document.getElementById("rankingContent").classList.contains("active")) {
+        atualizarDadosDetalhadosDiarios();
+    }
+
+    // Chamar a função de atualização inicial das metas se a aba de metas estiver ativa
+    if (document.getElementById("metasContent").classList.contains("active")) {
+        atualizarTabelasMetas();
+    }
+  });
+
+  // Função para atualizar as tabelas de metas
+  function atualizarTabelasMetas() {
+    const usuarios = JSON.parse(localStorage.getItem("usuarios") || "{}");
+    const ranking = JSON.parse(localStorage.getItem("ranking") || "{}");
+    const metaGeral = parseInt(localStorage.getItem("metaGeral")) || 1000; // Meta geral padrão de 1000
+
+    // Atualizar o input da meta geral
+    document.getElementById("metaGeralInput").value = metaGeral;
+    
+    const metasManhaTable = document.getElementById("metasManhaTable").getElementsByTagName("tbody")[0];
+    const metasTardeTable = document.getElementById("metasTardeTable").getElementsByTagName("tbody")[0];
+    
+    // Limpar tabelas
+    metasManhaTable.innerHTML = "";
+    metasTardeTable.innerHTML = "";
+    
+    // Obter mês e ano atual
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth() + 1; // getMonth() retorna 0-11, então somamos 1
+    const anoAtual = hoje.getFullYear();
+    
+    // Separar usuários por turno
+    const usuariosManha = [];
+    const usuariosTarde = [];
+    
+    for (const login in usuarios) {
+      const usuario = usuarios[login];
+      if (usuario.turno === "manha") {
+        usuariosManha.push({login, ...usuario});
+      } else if (usuario.turno === "tarde") {
+        usuariosTarde.push({login, ...usuario});
+      }
+    }
+    
+    // Função para calcular vendas mensais de um usuário
+    function calcularVendasMensais(login) {
+      let totalVendas = 0;
+      const dadosUsuario = ranking[login] || {};
+      
+      for (const data in dadosUsuario) {
+        const dataObj = new Date(data);
+        const mes = dataObj.getMonth() + 1;
+        const ano = dataObj.getFullYear();
+        
+        if (mes === mesAtual && ano === anoAtual) {
+          totalVendas += dadosUsuario[data].vendas || 0;
+        }
+      }
+      
+      return totalVendas;
+    }
+    
+    // Função para criar linha da tabela
+    function criarLinhaTabela(usuario) {
+      const vendasMensais = calcularVendasMensais(usuario.login);
+      const faltaParaMeta = Math.max(0, metaGeral - vendasMensais);
+      
+      const progressoPorcentagem = Math.min((vendasMensais / metaGeral) * 100, 100);
+      
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${usuario.login}</td>
+        <td>
+          Vendas: ${vendasMensais}<br>
+          Falta: ${faltaParaMeta}
+        </td>
+        <td>
+          <div class="progress-container">
+            <div class="progress-bar" style="width: ${progressoPorcentagem}%">
+              ${progressoPorcentagem.toFixed(1)}%
+            </div>
+          </div>
+        </td>
+      `;
+      return row;
+    }
+    
+    // Preencher tabela da manhã
+    usuariosManha.forEach(usuario => {
+      metasManhaTable.appendChild(criarLinhaTabela(usuario));
+    });
+    
+    // Preencher tabela da tarde
+    usuariosTarde.forEach(usuario => {
+      metasTardeTable.appendChild(criarLinhaTabela(usuario));
+    });
+  }
+  
+  // Função para salvar a meta geral
+  function salvarMetaGeral() {
+    const metaGeralInput = document.getElementById("metaGeralInput");
+    const novaMetaGeral = parseInt(metaGeralInput.value) || 0;
+    localStorage.setItem("metaGeral", novaMetaGeral);
+    atualizarTabelasMetas();
+    backupAutomaticoSeAtivo();
+    alert("Meta geral salva com sucesso!");
+  }
+
+  // Remover a função atualizarMeta, pois a meta agora é geral
+  // function atualizarMeta(login, novaMeta) {
+  //   const metas = JSON.parse(localStorage.getItem('metas') || '{}');
+  //   metas[login] = parseInt(novaMeta) || 0;
+  //   localStorage.setItem('metas', JSON.stringify(metas));
+  //   atualizarTabelasMetas();
+  //   backupAutomaticoSeAtivo();
+  // }
+</script>
+</body>
+</html>
+
