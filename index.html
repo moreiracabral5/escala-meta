@@ -777,6 +777,25 @@
       <input type="number" id="metaGeralInput" placeholder="Ex: 1000" min="0" style="width: 150px; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
       <button onclick="salvarMetaGeral()" style="padding: 8px 15px; margin-left: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer;">Salvar Meta Geral</button>
     </div>
+    
+    <!-- Filtros de metas -->
+    <div class="filtros-ranking">
+      <div class="filtro-item">
+        <label for="filtroTurnoMetas">Filtrar por Turno:</label>
+        <select id="filtroTurnoMetas" onchange="atualizarTabelasMetas()">
+          <option value="todos">Todos os Turnos</option>
+          <option value="manha">Turno da Manhã</option>
+          <option value="tarde">Turno da Tarde</option>
+        </select>
+      </div>
+      
+      <div class="filtro-item">
+        <label for="filtroMesMetas">Filtrar por Mês:</label>
+        <select id="filtroMesMetas" onchange="atualizarTabelasMetas()">
+          <!-- Opções de mês serão adicionadas dinamicamente -->
+        </select>
+      </div>
+    </div>
     <h3>Metas de Vendas - Turno da Manhã</h3>
     <table class="metas-table" id="metasManhaTable">
       <thead>
@@ -904,6 +923,7 @@
         
         // Se a aba for de metas, atualiza as tabelas de metas
         if (tabId === 'metas') {
+          preencherFiltroMesMetas();
           atualizarTabelasMetas();
         }
       });
@@ -932,28 +952,60 @@
     senhaInput.type = document.getElementById('mostrarSenha').checked ? 'text' : 'password';
   }
 
-  function fazerLogin() {
+  // Função para ler usuários do Firebase
+  async function lerUsuariosDoFirebase() {
+    try {
+      const snapshot = await db.collection("usuarios").get();
+      const usuarios = [];
+      snapshot.forEach(doc => {
+        usuarios.push(doc.data());
+      });
+      return usuarios;
+    } catch (error) {
+      console.error("Erro ao ler usuários do Firebase:", error);
+      return null;
+    }
+  }
+
+  async function fazerLogin() {
     const login = document.getElementById("login").value;
     const senha = document.getElementById("senha").value;
-    let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
 
-    // Fallback: Garante que o usuário admin esteja sempre presente para login
-    const adminUser = { login: "admin", senha: "admin123", tipo: "admin", turno: "manha" };
-    const adminExists = usuarios.some(u => u.login === "admin");
-    if (!adminExists) {
-      usuarios.unshift(adminUser);
-      localStorage.setItem("usuarios", JSON.stringify(usuarios));
-    } else {
-      // Atualiza a senha do admin se ela foi alterada no código e não no localStorage
-      const currentAdmin = usuarios.find(u => u.login === "admin");
-      if (currentAdmin && currentAdmin.senha !== adminUser.senha) {
-        usuarios = usuarios.map(u => u.login === "admin" ? adminUser : u);
+    if (!login || !senha) {
+      alert('Preencha todos os campos!');
+      return;
+    }
+
+    // Tentar carregar usuários do Firebase primeiro
+    let usuarios = await lerUsuariosDoFirebase();
+    
+    // Se falhar, usar localStorage como fallback
+    if (!usuarios || usuarios.length === 0) {
+      console.log("Carregando usuários do localStorage como fallback");
+      usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+      
+      // Fallback: Garante que o usuário admin esteja sempre presente para login
+      const adminUser = { login: "admin", senha: "admin123", tipo: "admin", turno: "manha" };
+      const adminExists = usuarios.some(u => u.login === "admin");
+      if (!adminExists) {
+        usuarios.unshift(adminUser);
         localStorage.setItem("usuarios", JSON.stringify(usuarios));
+      } else {
+        // Atualiza a senha do admin se ela foi alterada no código e não no localStorage
+        const currentAdmin = usuarios.find(u => u.login === "admin");
+        if (currentAdmin && currentAdmin.senha !== adminUser.senha) {
+          usuarios = usuarios.map(u => u.login === "admin" ? adminUser : u);
+          localStorage.setItem("usuarios", JSON.stringify(usuarios));
+        }
       }
+    } else {
+      console.log("Usuários carregados do Firebase");
+      // Sincronizar com localStorage
+      localStorage.setItem('usuarios', JSON.stringify(usuarios));
     }
 
     console.log("Tentativa de login para:", login);
-    console.log("Usuários carregados do localStorage (após fallback):", usuarios);
+    console.log("Usuários carregados:", usuarios);
 
     const user = usuarios.find(u => u.login.toLowerCase() === login.toLowerCase() && u.senha === senha);
     if (user) {
@@ -978,6 +1030,17 @@
         document.getElementById('posicaoUsuario').style.display = 'block';
       }
 
+      // Carregar dados do Firebase após login bem-sucedido
+      await carregarDadosDoFirebase();
+
+      // Inicializar meta geral com prioridade do Firebase
+      inicializarMetaGeral().then(() => {
+        // Após carregar a meta, atualizar as tabelas de metas se necessário
+        if (document.getElementById("metasContent").classList.contains("active")) {
+          atualizarTabelasMetas();
+        }
+      });
+
       desenharCalendarios();
       preencherFiltroMes();
       atualizarTabelasRanking();
@@ -987,6 +1050,61 @@
       backupAutomaticoSeAtivo();
     } else {
       alert('Login ou senha incorretos!');
+    }
+  }
+
+  // Função para ler folgas do Firebase
+  async function lerFolgasDoFirebase() {
+    try {
+      const snapshot = await db.collection("folgas").get();
+      const folgas = {};
+      snapshot.forEach(doc => {
+        folgas[doc.id] = doc.data().datas || [];
+      });
+      return folgas;
+    } catch (error) {
+      console.error("Erro ao ler folgas do Firebase:", error);
+      return null;
+    }
+  }
+
+  // Função para ler ranking do Firebase
+  async function lerRankingDoFirebase() {
+    try {
+      const snapshot = await db.collection("ranking").get();
+      const ranking = {};
+      snapshot.forEach(doc => {
+        ranking[doc.id] = doc.data().registros || {};
+      });
+      return ranking;
+    } catch (error) {
+      console.error("Erro ao ler ranking do Firebase:", error);
+      return null;
+    }
+  }
+
+  // Função para carregar todos os dados do Firebase
+  async function carregarDadosDoFirebase() {
+    try {
+      // Carregar folgas do Firebase
+      const folgasFirebase = await lerFolgasDoFirebase();
+      if (folgasFirebase) {
+        console.log("Folgas carregadas do Firebase");
+        localStorage.setItem('folgas', JSON.stringify(folgasFirebase));
+      } else {
+        console.log("Mantendo folgas do localStorage");
+      }
+
+      // Carregar ranking do Firebase
+      const rankingFirebase = await lerRankingDoFirebase();
+      if (rankingFirebase) {
+        console.log("Ranking carregado do Firebase");
+        localStorage.setItem('ranking', JSON.stringify(rankingFirebase));
+      } else {
+        console.log("Mantendo ranking do localStorage");
+      }
+    } catch (error) {
+      console.error("Erro ao carregar dados do Firebase:", error);
     }
   }
 
@@ -1572,6 +1690,34 @@
     select.value = mesAtual;
   }
 
+  function preencherFiltroMesMetas() {
+    const select = document.getElementById('filtroMesMetas');
+    select.innerHTML = '';
+
+    // Adicionar opção para todos os meses
+    const optionTodos = document.createElement('option');
+    optionTodos.value = 'todos';
+    optionTodos.textContent = 'Todos os Meses';
+    select.appendChild(optionTodos);
+
+    // Adicionar opções para cada mês
+    const meses = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+
+    meses.forEach((mes, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = mes;
+      select.appendChild(option);
+    });
+
+    // Selecionar mês atual por padrão
+    const mesAtual = new Date().getMonth();
+    select.value = mesAtual;
+  }
+
   function adicionarDadosRanking() {
     const login = document.getElementById('usuarioRankingSelect').value;
     const data = document.getElementById('dataRanking').value;
@@ -1977,8 +2123,53 @@
 
   // Nova função para salvar meta geral no Firebase
   async function salvarMetaGeralNoFirebase(metaGeral) {
-    const ref = db.collection("configuracoes").doc("metaGeral");
+    const ref = db.collection("meta").doc("metaGeral");
     await ref.set({ valor: metaGeral });
+  }
+
+  // Nova função para ler meta geral do Firebase
+  async function lerMetaGeralDoFirebase() {
+    try {
+      const ref = db.collection("meta").doc("metaGeral");
+      const doc = await ref.get();
+      if (doc.exists) {
+        return doc.data().valor;
+      } else {
+        console.log("Meta geral não encontrada no Firebase");
+        return null;
+      }
+    } catch (error) {
+      console.error("Erro ao ler meta geral do Firebase:", error);
+      return null;
+    }
+  }
+
+  // Função para inicializar meta geral com prioridade do Firebase
+  async function inicializarMetaGeral() {
+    try {
+      const metaFirebase = await lerMetaGeralDoFirebase();
+      if (metaFirebase !== null) {
+        // Se encontrou no Firebase, atualiza o localStorage
+        localStorage.setItem("metaGeral", metaFirebase);
+        console.log("Meta geral carregada do Firebase:", metaFirebase);
+      } else {
+        // Se não encontrou no Firebase, verifica se existe no localStorage
+        const metaLocal = localStorage.getItem("metaGeral");
+        if (!metaLocal) {
+          // Se não existe nem no Firebase nem no localStorage, define valor padrão
+          localStorage.setItem("metaGeral", "1000");
+          console.log("Meta geral inicializada com valor padrão: 1000");
+        } else {
+          console.log("Meta geral mantida do localStorage:", metaLocal);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao inicializar meta geral:", error);
+      // Em caso de erro, garante que existe um valor padrão
+      if (!localStorage.getItem("metaGeral")) {
+        localStorage.setItem("metaGeral", "1000");
+      }
+    }
   }
 
   function alternarTema() {
@@ -2224,15 +2415,20 @@
 
     // Chamar a função de atualização inicial das metas se a aba de metas estiver ativa
     if (document.getElementById("metasContent").classList.contains("active")) {
+        preencherFiltroMesMetas();
         atualizarTabelasMetas();
     }
   });
 
   // Função para atualizar as tabelas de metas
   function atualizarTabelasMetas() {
-    const usuarios = JSON.parse(localStorage.getItem("usuarios") || "{}");
+    const usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
     const ranking = JSON.parse(localStorage.getItem("ranking") || "{}");
     const metaGeral = parseInt(localStorage.getItem("metaGeral")) || 1000; // Meta geral padrão de 1000
+
+    // Obter filtros
+    const filtroTurno = document.getElementById("filtroTurnoMetas").value;
+    const filtroMes = document.getElementById("filtroMesMetas").value;
 
     // Atualizar o input da meta geral
     document.getElementById("metaGeralInput").value = metaGeral;
@@ -2244,41 +2440,84 @@
     metasManhaTable.innerHTML = "";
     metasTardeTable.innerHTML = "";
     
-    // Obter mês e ano atual
-    const hoje = new Date();
-    const mesAtual = hoje.getMonth() + 1; // getMonth() retorna 0-11, então somamos 1
-    const anoAtual = hoje.getFullYear();
+    // Obter mês e ano para filtro
+    let mesParaFiltro, anoParaFiltro;
+    if (filtroMes === 'todos') {
+      // Se for "todos", usar mês atual como referência para o ano
+      const hoje = new Date();
+      mesParaFiltro = null; // null indica todos os meses
+      anoParaFiltro = hoje.getFullYear();
+    } else {
+      const hoje = new Date();
+      mesParaFiltro = parseInt(filtroMes) + 1; // filtroMes é 0-11, mas precisamos 1-12
+      anoParaFiltro = hoje.getFullYear();
+    }
     
+    // Verificar se o usuário logado é funcionário
+    if (usuarioLogado && usuarioLogado.tipo === 'funcionario') {
+      // Para funcionários: mostrar apenas sua própria meta
+      const vendasMensais = calcularVendasMensais(usuarioLogado.login);
+      const faltaParaMeta = Math.max(0, metaGeral - vendasMensais);
+      const progressoPorcentagem = Math.min((vendasMensais / metaGeral) * 100, 100);
+      
+      // Determinar em qual tabela mostrar (baseado no turno do funcionário)
+      const tabelaDestino = usuarioLogado.turno === 'manha' ? metasManhaTable : metasTardeTable;
+      const tabelaOutroTurno = usuarioLogado.turno === 'manha' ? metasTardeTable : metasManhaTable;
+      
+      // Verificar se o filtro de turno permite mostrar os dados do funcionário
+      const mostrarDados = filtroTurno === 'todos' || 
+                          (filtroTurno === 'manha' && usuarioLogado.turno === 'manha') ||
+                          (filtroTurno === 'tarde' && usuarioLogado.turno === 'tarde');
+      
+      if (mostrarDados) {
+        // Mostrar dados do funcionário na tabela do seu turno
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${usuarioLogado.login}</td>
+          <td>
+            Vendas: ${vendasMensais}<br>
+            Falta: ${faltaParaMeta}
+          </td>
+          <td>
+            <div class="progress-container">
+              <div class="progress-bar" style="width: ${progressoPorcentagem}%">
+                ${progressoPorcentagem.toFixed(1)}%
+              </div>
+            </div>
+          </td>
+        `;
+        tabelaDestino.appendChild(row);
+        
+        // Mostrar mensagem na tabela do outro turno
+        const rowOutroTurno = document.createElement("tr");
+        rowOutroTurno.innerHTML = '<td colspan="3">Você não tem acesso aos dados deste turno</td>';
+        tabelaOutroTurno.appendChild(rowOutroTurno);
+      } else {
+        // Filtro não permite mostrar os dados do funcionário
+        const rowManha = document.createElement("tr");
+        rowManha.innerHTML = '<td colspan="3">Filtro aplicado para outro turno</td>';
+        metasManhaTable.appendChild(rowManha);
+        
+        const rowTarde = document.createElement("tr");
+        rowTarde.innerHTML = '<td colspan="3">Filtro aplicado para outro turno</td>';
+        metasTardeTable.appendChild(rowTarde);
+      }
+      
+      return; // Sair da função para funcionários
+    }
+    
+    // Para administradores: mostrar todas as metas (código original)
     // Separar usuários por turno
     const usuariosManha = [];
     const usuariosTarde = [];
     
-    for (const login in usuarios) {
-      const usuario = usuarios[login];
+    usuarios.forEach(usuario => {
       if (usuario.turno === "manha") {
-        usuariosManha.push({login, ...usuario});
+        usuariosManha.push({login: usuario.login, ...usuario});
       } else if (usuario.turno === "tarde") {
-        usuariosTarde.push({login, ...usuario});
+        usuariosTarde.push({login: usuario.login, ...usuario});
       }
-    }
-    
-    // Função para calcular vendas mensais de um usuário
-    function calcularVendasMensais(login) {
-      let totalVendas = 0;
-      const dadosUsuario = ranking[login] || {};
-      
-      for (const data in dadosUsuario) {
-        const dataObj = new Date(data);
-        const mes = dataObj.getMonth() + 1;
-        const ano = dataObj.getFullYear();
-        
-        if (mes === mesAtual && ano === anoAtual) {
-          totalVendas += dadosUsuario[data].vendas || 0;
-        }
-      }
-      
-      return totalVendas;
-    }
+    });
     
     // Função para criar linha da tabela
     function criarLinhaTabela(usuario) {
@@ -2306,14 +2545,65 @@
     }
     
     // Preencher tabela da manhã
-    usuariosManha.forEach(usuario => {
-      metasManhaTable.appendChild(criarLinhaTabela(usuario));
-    });
+    if (filtroTurno === "todos" || filtroTurno === "manha") {
+      if (usuariosManha.length === 0) {
+        const row = document.createElement("tr");
+        row.innerHTML = '<td colspan="3">Nenhum funcionário do turno da manhã</td>';
+        metasManhaTable.appendChild(row);
+      } else {
+        usuariosManha.forEach(usuario => {
+          metasManhaTable.appendChild(criarLinhaTabela(usuario));
+        });
+      }
+    } else {
+      const row = document.createElement("tr");
+      row.innerHTML = '<td colspan="3">Filtro aplicado para outro turno</td>';
+      metasManhaTable.appendChild(row);
+    }
     
     // Preencher tabela da tarde
-    usuariosTarde.forEach(usuario => {
-      metasTardeTable.appendChild(criarLinhaTabela(usuario));
-    });
+    if (filtroTurno === "todos" || filtroTurno === "tarde") {
+      if (usuariosTarde.length === 0) {
+        const row = document.createElement("tr");
+        row.innerHTML = '<td colspan="3">Nenhum funcionário do turno da tarde</td>';
+        metasTardeTable.appendChild(row);
+      } else {
+        usuariosTarde.forEach(usuario => {
+          metasTardeTable.appendChild(criarLinhaTabela(usuario));
+        });
+      }
+    } else {
+      const row = document.createElement("tr");
+      row.innerHTML = '<td colspan="3">Filtro aplicado para outro turno</td>';
+      metasTardeTable.appendChild(row);
+    }
+    
+    // Função para calcular vendas mensais de um usuário considerando o filtro
+    function calcularVendasMensais(login) {
+      let totalVendas = 0;
+      const dadosUsuario = ranking[login] || {};
+      
+      for (const data in dadosUsuario) {
+        const dataObj = new Date(data);
+        const mes = dataObj.getMonth() + 1;
+        const ano = dataObj.getFullYear();
+        
+        // Aplicar filtro de mês
+        if (mesParaFiltro === null) {
+          // Todos os meses do ano atual
+          if (ano === anoParaFiltro) {
+            totalVendas += dadosUsuario[data].vendas || 0;
+          }
+        } else {
+          // Mês específico do ano atual
+          if (mes === mesParaFiltro && ano === anoParaFiltro) {
+            totalVendas += dadosUsuario[data].vendas || 0;
+          }
+        }
+      }
+      
+      return totalVendas;
+    }
   }
   
   // Função para salvar a meta geral
